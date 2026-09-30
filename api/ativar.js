@@ -1,9 +1,9 @@
 // Função serverless (Vercel) que ativa o cliente no MaxPlayer.
-// Fluxo: (opcional) valida o login no servidor Xtream -> verifica se já existe no MaxPlayer -> cria.
-// O servidor usado pelo app é o do domínio cadastrado no painel (MAXPLAYER_DOMAIN_ID).
+// Fluxo: busca no painel a URL do domínio (MAXPLAYER_DOMAIN_ID) -> valida o login nesse servidor
+// Xtream -> verifica se já existe no MaxPlayer -> cria.
 
 const API = 'https://api.maxplayer.tv/v3/api/public';
-const { MAXPLAYER_TOKEN, MAXPLAYER_DOMAIN_ID, XTREAM_URL, MAX_DEVICES } = process.env;
+const { MAXPLAYER_TOKEN, MAXPLAYER_DOMAIN_ID, MAX_DEVICES } = process.env;
 
 // Limite simples por IP (por instância). Para tráfego alto, use o Firewall da Vercel ou Upstash.
 const tentativas = new Map();
@@ -37,9 +37,43 @@ async function maxplayer(caminho, opcoes = {}) {
   return { status: r.status, dados };
 }
 
+// Endereço do servidor salvo no domínio do painel. Guardado em memória por 10 min
+// para não gastar o limite de 60 requisições/min da API.
+let cacheServidor = { url: '', ate: 0 };
+
+async function urlDoServidor() {
+  if (cacheServidor.url && Date.now() < cacheServidor.ate) return cacheServidor.url;
+
+  // GET /domains/{id} exige chave de provedor; se não der, procura na lista de domínios liberados.
+  let d = null;
+  const { status, dados } = await maxplayer(`/domains/${encodeURIComponent(MAXPLAYER_DOMAIN_ID)}`);
+  if (status === 200 && dados?.data) {
+    d = dados.data;
+  } else {
+    const lista = await maxplayer('/domains');
+    if (lista.status === 200 && Array.isArray(lista.dados?.data)) {
+      d = lista.dados.data.find((x) => String(x.id) === String(MAXPLAYER_DOMAIN_ID)) || null;
+    }
+  }
+  if (!d?.domain) throw new Error(`domínio ${MAXPLAYER_DOMAIN_ID} não encontrado ou com endereço oculto`);
+
+  const https = Number(d.https) === 1 || d.https === true;
+  const porta = d.port ? `:${d.port}` : '';
+  const url = `${https ? 'https' : 'http'}://${d.domain}${porta}`;
+  cacheServidor = { url, ate: Date.now() + 10 * 60 * 1000 };
+  return url;
+}
+
 // Confere o login direto no servidor Xtream (player_api.php)
 async function validarNoServidor(usuario, senha) {
-  const url = `${XTREAM_URL.replace(/\/+$/, '')}/player_api.php?username=${encodeURIComponent(usuario)}&password=${encodeURIComponent(senha)}`;
+  let base;
+  try {
+    base = await urlDoServidor();
+  } catch (e) {
+    console.error('Não foi possível obter a URL do domínio:', e.message);
+    return { ok: false, motivo: 'offline' };
+  }
+  const url = `${base}/player_api.php?username=${encodeURIComponent(usuario)}&password=${encodeURIComponent(senha)}`;
   let info;
   try {
     const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
@@ -97,8 +131,8 @@ export default async function handler(req, res) {
     return responder(res, 400, false, 'Preencha o login e a senha exatamente como recebeu, sem espaços.');
   }
 
-  // 1. Login existe e está ativo no servidor? (só se XTREAM_URL estiver configurada)
-  const v = XTREAM_URL ? await validarNoServidor(usuario, senha) : { ok: true };
+  // 1. Login existe e está ativo no servidor do domínio?
+  const v = await validarNoServidor(usuario, senha);
   if (!v.ok) {
     const msgs = {
       invalido: 'Login ou senha não conferem. Confira as letras maiúsculas e minúsculas.',
