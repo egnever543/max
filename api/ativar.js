@@ -84,6 +84,8 @@ async function validarNoServidor(usuario, senha) {
   if (!info || Number(info.auth) !== 1) return { ok: false, motivo: 'invalido' };
   if (info.status && info.status !== 'Active') return { ok: false, motivo: 'inativo' };
   if (info.exp_date && Number(info.exp_date) * 1000 < Date.now()) return { ok: false, motivo: 'vencido' };
+  // Testes (trial) não podem ativar o app
+  if (Number(info.is_trial) === 1 || info.is_trial === true) return { ok: false, motivo: 'trial' };
   return { ok: true };
 }
 
@@ -138,6 +140,7 @@ export default async function handler(req, res) {
       invalido: 'Login ou senha não conferem. Confira as letras maiúsculas e minúsculas.',
       inativo: 'Esse acesso está bloqueado. Fale com quem vendeu sua assinatura.',
       vencido: 'Essa assinatura venceu. Renove para ativar o app.',
+      trial: 'Acessos de teste não podem ativar o app. Assine um plano para liberar.',
       offline: 'Não conseguimos conferir seu login agora. Tente de novo em alguns minutos.',
     };
     return responder(res, v.motivo === 'offline' ? 503 : 400, false, msgs[v.motivo]);

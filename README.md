@@ -3,7 +3,7 @@
 Formulário onde o cliente digita o login e a senha da assinatura. O sistema:
 
 1. Busca no painel MaxPlayer o endereço salvo no domínio `MAXPLAYER_DOMAIN_ID` e confere
-   nesse servidor Xtream se o login existe, está ativo e não venceu.
+   nesse servidor Xtream se o login existe, está ativo, não venceu e não é teste (trial).
 2. Verifica se esse login já foi ativado no MaxPlayer.
 3. Cria o cliente no MaxPlayer com o mesmo login e senha (`POST /users`), no domínio
    `MAXPLAYER_DOMAIN_ID` — a URL do servidor é a que está salva nesse domínio no painel.
