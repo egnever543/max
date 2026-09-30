@@ -10,14 +10,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --noite: #16163F;
-    --tela: #20205A;
-    --borda: #34347A;
-    --ambar: #FFB547;
-    --texto: #F2F0FF;
-    --suave: #A9A6D6;
+    --noite: #0A0A0A;
+    --tela: #161616;
+    --borda: #2E2E2E;
+    --ambar: #FFC700;
+    --texto: #FFFFFF;
+    --suave: #B8B8B8;
     --erro: #FF8A8A;
-    --ok: #7BE0B0;
+    --ok: #FFC700;
     box-sizing: border-box;
     padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -25,13 +25,17 @@
   *, *::before, *::after { box-sizing: inherit; }
   html, body { height: 100%; margin: 0; }
   body {
-    background: radial-gradient(120% 70% at 50% 0%, #2A2A6E 0%, var(--noite) 60%) fixed, var(--noite);
+    background: radial-gradient(120% 70% at 50% 0%, #2A2300 0%, var(--noite) 55%) fixed, var(--noite);
     color: var(--texto);
     font: 400 1rem/1.55 "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
     display: grid; place-items: center;
     padding: 1.5rem 1rem;
   }
   main { width: 100%; max-width: 26rem; }
+
+  .logo { display: block; height: 44px; width: auto; margin: 0 0 1.5rem; }
+  .logo-texto { font: 800 1.6rem "Bricolage Grotesque", "Figtree", sans-serif; color: var(--ambar); margin: 0 0 1.5rem; }
+  .logo-texto[hidden] { display: none; }
 
   h1 {
     font: 800 clamp(2.2rem, 9vw, 3rem)/1.02 "Bricolage Grotesque", "Figtree", sans-serif;
@@ -45,7 +49,7 @@
     border: 1px solid var(--borda);
     border-radius: 22px;
     padding: 1.75rem 1.5rem 1.5rem;
-    box-shadow: 0 0 0 6px #1B1B4A, 0 30px 80px -30px rgba(255,181,71,.35);
+    box-shadow: 0 0 0 6px #111, 0 30px 80px -30px rgba(255,199,0,.35);
   }
 
   label { display: block; font-weight: 600; margin-bottom: .4rem; }
@@ -60,7 +64,7 @@
     border-radius: 12px;
     padding: .85rem 1rem;
   }
-  input:focus-visible { outline: none; border-color: var(--ambar); box-shadow: 0 0 0 3px rgba(255,181,71,.25); }
+  input:focus-visible { outline: none; border-color: var(--ambar); box-shadow: 0 0 0 3px rgba(255,199,0,.25); }
   .com-botao input { padding-right: 5.5rem; }
   .ver {
     position: absolute; right: .4rem; top: 50%; transform: translateY(-50%);
@@ -76,10 +80,10 @@
   button[type=submit] {
     width: 100%; margin-top: .5rem;
     font: 700 1.1rem "Figtree", sans-serif;
-    color: #231800; background: var(--ambar);
+    color: #000; background: var(--ambar);
     border: 0; border-radius: 12px; padding: 1rem; cursor: pointer;
   }
-  button[type=submit]:hover { background: #FFC56E; }
+  button[type=submit]:hover { background: #FFD633; }
   button[type=submit]:focus-visible { outline: 3px solid var(--texto); outline-offset: 3px; }
   button[type=submit]:disabled { opacity: .6; cursor: wait; }
 
@@ -91,7 +95,7 @@
   .pronto[hidden] { display: none; }
   .selo {
     width: 3.2rem; height: 3.2rem; border-radius: 50%;
-    background: rgba(123,224,176,.15); color: var(--ok);
+    background: rgba(255,199,0,.15); color: var(--ok);
     display: grid; place-items: center; font-size: 1.6rem; margin-bottom: 1rem;
   }
   .pronto h2 { font: 800 1.6rem/1.15 "Bricolage Grotesque", sans-serif; margin: 0 0 .5rem; }
@@ -111,6 +115,9 @@
 </head>
 <body>
 <main>
+  <img class="logo" src="https://my.maxplayer.tv/images/logo-sm.png" alt="MaxPlayer"
+       onerror="this.remove(); document.getElementById('logo-texto').hidden = false;">
+  <p class="logo-texto" id="logo-texto" hidden>MaxPlayer</p>
   <h1>Ative seu MaxPlayer</h1>
   <p class="intro">Use o mesmo login e senha da sua assinatura. Em segundos o app fica liberado.</p>
 
