@@ -1,5 +1,6 @@
 // Função serverless (Vercel) que ativa o cliente no MaxPlayer.
-// Fluxo: valida o login no servidor Xtream -> verifica se já existe no MaxPlayer -> cria.
+// Fluxo: (opcional) valida o login no servidor Xtream -> verifica se já existe no MaxPlayer -> cria.
+// O servidor usado pelo app é o do domínio cadastrado no painel (MAXPLAYER_DOMAIN_ID).
 
 const API = 'https://api.maxplayer.tv/v3/api/public';
 const { MAXPLAYER_TOKEN, MAXPLAYER_DOMAIN_ID, XTREAM_URL, MAX_DEVICES } = process.env;
@@ -38,7 +39,7 @@ async function maxplayer(caminho, opcoes = {}) {
 
 // Confere o login direto no servidor Xtream (player_api.php)
 async function validarNoServidor(usuario, senha) {
-  const url = `${XTREAM_URL}/player_api.php?username=${encodeURIComponent(usuario)}&password=${encodeURIComponent(senha)}`;
+  const url = `${XTREAM_URL.replace(/\/+$/, '')}/player_api.php?username=${encodeURIComponent(usuario)}&password=${encodeURIComponent(senha)}`;
   let info;
   try {
     const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
@@ -73,7 +74,7 @@ async function jaExiste(usuario) {
 export default async function handler(req, res) {
   if (req.method !== 'POST') return responder(res, 405, false, 'Método não permitido.');
 
-  if (!MAXPLAYER_TOKEN || !MAXPLAYER_DOMAIN_ID || !XTREAM_URL) {
+  if (!MAXPLAYER_TOKEN || !MAXPLAYER_DOMAIN_ID) {
     console.error('Variáveis de ambiente faltando');
     return responder(res, 500, false, 'Ativação indisponível no momento. Fale com o suporte.');
   }
@@ -96,8 +97,8 @@ export default async function handler(req, res) {
     return responder(res, 400, false, 'Preencha o login e a senha exatamente como recebeu, sem espaços.');
   }
 
-  // 1. Login existe e está ativo no servidor?
-  const v = await validarNoServidor(usuario, senha);
+  // 1. Login existe e está ativo no servidor? (só se XTREAM_URL estiver configurada)
+  const v = XTREAM_URL ? await validarNoServidor(usuario, senha) : { ok: true };
   if (!v.ok) {
     const msgs = {
       invalido: 'Login ou senha não conferem. Confira as letras maiúsculas e minúsculas.',
