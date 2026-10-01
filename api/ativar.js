@@ -7,7 +7,9 @@ const API = 'https://api.maxplayer.tv/v3/api/public';
 const { MAXPLAYER_TOKEN, MAXPLAYER_DOMAIN_ID, MAX_DEVICES, SIGMA_TOKEN } = process.env;
 const SIGMA_URL = (process.env.SIGMA_URL || 'https://sistema.ftspanel.vip/api/integration/v1').replace(/\/+$/, '');
 
-// Revendedores autorizados (ID da Sigma ou usuário do revendedor), separados por vírgula
+// Revendedores autorizados (ID da Sigma ou usuário do revendedor), separados por vírgula.
+// Valor "1" = libera para qualquer revendedor (não consulta a Sigma).
+const LIBERAR_TODOS = (process.env.SIGMA_REVENDAS_PERMITIDAS || '').trim() === '1';
 const REVENDAS_PERMITIDAS = new Set(
   (process.env.SIGMA_REVENDAS_PERMITIDAS || '')
     .split(',')
@@ -160,7 +162,8 @@ async function jaExiste(usuario) {
 export default async function handler(req, res) {
   if (req.method !== 'POST') return responder(res, 405, false, 'Método não permitido.');
 
-  if (!MAXPLAYER_TOKEN || !MAXPLAYER_DOMAIN_ID || !SIGMA_TOKEN || REVENDAS_PERMITIDAS.size === 0) {
+  const sigmaOk = LIBERAR_TODOS || (SIGMA_TOKEN && REVENDAS_PERMITIDAS.size > 0);
+  if (!MAXPLAYER_TOKEN || !MAXPLAYER_DOMAIN_ID || !sigmaOk) {
     console.error('Variáveis de ambiente faltando');
     return responder(res, 500, false, 'Ativação indisponível no momento. Fale com o suporte.');
   }
@@ -184,9 +187,9 @@ export default async function handler(req, res) {
   }
 
   // 1. Login existe e está ativo no servidor do domínio?
-  // 2. O revendedor do cliente (na Sigma) está na lista permitida?
+  // 2. O revendedor do cliente (na Sigma) está na lista permitida? (pulado se a lista for "1")
   let v = await validarNoServidor(usuario, senha);
-  if (v.ok) v = await revendaPermitida(usuario);
+  if (v.ok && !LIBERAR_TODOS) v = await revendaPermitida(usuario);
   if (!v.ok) {
     const msgs = {
       invalido: 'Login ou senha não conferem. Confira as letras maiúsculas e minúsculas.',
