@@ -196,6 +196,9 @@ export default async function handler(req, res) {
   // 1. Login existe e está ativo no servidor do domínio?
   // 2. O revendedor do cliente (na Sigma) está na lista permitida?
   // Com SIGMA_REVENDAS_PERMITIDAS=1 as duas conferências são puladas.
+  const valorLista = process.env.SIGMA_REVENDAS_PERMITIDAS || '';
+  console.log('Ativação v2026-10-02 | modo:', LIBERAR_TODOS ? 'sem conferência' : 'com conferência',
+    '| SIGMA_REVENDAS_PERMITIDAS tem', valorLista.length, 'caractere(s)');
   let v = { ok: true };
   if (!LIBERAR_TODOS) {
     v = await validarNoServidor(usuario, senha);
