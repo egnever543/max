@@ -8,7 +8,7 @@ const { MAXPLAYER_TOKEN, MAXPLAYER_DOMAIN_ID, MAX_DEVICES, SIGMA_TOKEN } = proce
 const SIGMA_URL = (process.env.SIGMA_URL || 'https://sistema.ftspanel.vip/api/integration/v1').replace(/\/+$/, '');
 
 // Revendedores autorizados (ID da Sigma ou usuário do revendedor), separados por vírgula.
-// Valor "1" = libera para qualquer revendedor (não consulta a Sigma).
+// Valor "1" = não confere nada (nem login no Xtream, nem Sigma): cria direto no MaxPlayer.
 const LIBERAR_TODOS = (process.env.SIGMA_REVENDAS_PERMITIDAS || '').trim() === '1';
 const REVENDAS_PERMITIDAS = new Set(
   (process.env.SIGMA_REVENDAS_PERMITIDAS || '')
@@ -194,9 +194,13 @@ export default async function handler(req, res) {
   }
 
   // 1. Login existe e está ativo no servidor do domínio?
-  // 2. O revendedor do cliente (na Sigma) está na lista permitida? (pulado se a lista for "1")
-  let v = await validarNoServidor(usuario, senha);
-  if (v.ok && !LIBERAR_TODOS) v = await revendaPermitida(usuario);
+  // 2. O revendedor do cliente (na Sigma) está na lista permitida?
+  // Com SIGMA_REVENDAS_PERMITIDAS=1 as duas conferências são puladas.
+  let v = { ok: true };
+  if (!LIBERAR_TODOS) {
+    v = await validarNoServidor(usuario, senha);
+    if (v.ok) v = await revendaPermitida(usuario);
+  }
   if (!v.ok) {
     const msgs = {
       invalido: 'Login ou senha não conferem. Confira as letras maiúsculas e minúsculas.',

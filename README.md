@@ -6,7 +6,8 @@ Formulário onde o cliente digita o login e a senha da assinatura. O sistema:
    nesse servidor Xtream se o login existe, está ativo, não venceu e não é teste (trial).
 2. Consulta o cliente na API Sigma e só continua se o revendedor dono dele estiver em
    `SIGMA_REVENDAS_PERMITIDAS` (ID da Sigma ou usuário do revendedor). Também recusa trial.
-   Com `SIGMA_REVENDAS_PERMITIDAS=1` essa etapa é pulada e qualquer revendedor pode ativar.
+   Com `SIGMA_REVENDAS_PERMITIDAS=1` as etapas 1 e 2 são puladas: não confere o login nem a
+   revenda, e cria direto no MaxPlayer o que for digitado.
 3. Verifica se esse login já foi ativado no MaxPlayer.
 4. Cria o cliente no MaxPlayer com o mesmo login e senha (`POST /users`), no domínio
    `MAXPLAYER_DOMAIN_ID` — a URL do servidor é a que está salva nesse domínio no painel.
