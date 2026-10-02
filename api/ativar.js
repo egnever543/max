@@ -230,7 +230,7 @@ export default async function handler(req, res) {
     const { status, dados } = await maxplayer('/users', { method: 'POST', body: JSON.stringify(payload) });
 
     if (status === 200 && dados?.success === 1) {
-      console.log('Ativado:', usuario, 'id', dados.user_id, 'revenda', v.revendaId, v.revenda);
+      console.log('Ativado:', usuario, 'id', dados.user_id, v.revendaId ? `revenda ${v.revendaId} ${v.revenda}` : '');
       return responder(res, 200, true, 'Pronto! Seu app foi ativado.');
     }
 
