@@ -89,8 +89,15 @@ async function validarNoServidor(usuario, senha) {
   let info;
   try {
     const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
-    info = (await r.json())?.user_info;
-  } catch {
+    const texto = await r.text();
+    try {
+      info = JSON.parse(texto)?.user_info;
+    } catch {
+      console.error('Xtream respondeu sem JSON', r.status, base, texto.slice(0, 120));
+      return { ok: false, motivo: 'offline' };
+    }
+  } catch (e) {
+    console.error('Xtream inacessível', base, e.cause?.code || e.name, e.message);
     return { ok: false, motivo: 'offline' };
   }
   if (!info || Number(info.auth) !== 1) return { ok: false, motivo: 'invalido' };
